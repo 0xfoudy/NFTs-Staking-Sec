@@ -3,21 +3,20 @@ import "openzeppelin-contracts/contracts/utils/Strings.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 contract RareSkillsNFT is ERC721, Ownable {
 
     uint256 public tokenSupply = 0;
     uint256 public constant MAX_SUPPLY = 10;
-    uint256 public constant PRICE = 0.001 ether;
+    mapping(address => uint256) whiteListAllocation;
 
     constructor() ERC721("RareSkillsNFT", "RRSKLZ"){
-
+        whiteListAllocation[address(msg.sender)] = 3;
     }
 
-    function mint() external payable {
+    function mint() external {
         require(tokenSupply < MAX_SUPPLY, "Supply already at limit");
-        require(msg.value == PRICE, "Invalid price");
         _mint(msg.sender, tokenSupply);
         ++tokenSupply;
     }
@@ -28,10 +27,6 @@ contract RareSkillsNFT is ERC721, Ownable {
 
     function _baseURI() internal pure override returns (string memory){
         return "ipfs://QmZZzC4v7M6ZTYnuEgfA5qwHQUTm1DwRF8j3CQKtY6EXMF/";
-    }
-
-    function withdraw() external onlyOwner {
-        payable(msg.sender).transfer(address(this).balance);
     }
 
 }
