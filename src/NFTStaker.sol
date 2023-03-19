@@ -20,7 +20,7 @@ contract NFTStaker is IERC721Receiver {
 
     function withdrawNFT(uint256 tokenId) external{
         require(originalOwner[tokenId] == msg.sender, "Not original owner");
-        rareSkillsNFT.safeTransferFrom(address(this), msg.sender, tokenId);
+        rareSkillsNFT.safeTransferFrom(address(this), msg.sender, tokenId);      
     }
 
     function onERC721Received(

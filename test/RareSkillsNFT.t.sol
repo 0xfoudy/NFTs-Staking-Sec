@@ -6,20 +6,30 @@ import "forge-std/Test.sol";
 import "../src/RareSkillsNFT.sol";
 
 
-contract RareSkillsNFTTest is Test {
+contract RareSkillsNFTTest is        Test {
     RareSkillsNFT public rareSkillsNFT;
     address owner;
     address user;
+    bytes32[] proof;
 
     function setUp() public{
         owner = address(this);
         user = address(1);
-        rareSkillsNFT = new RareSkillsNFT();
+        rareSkillsNFT = new RareSkillsNFT(0xf95c14e6953c95195639e8266ab1a6850864d59a829da9f9b13602ee522f672b);
+        proof.push(0xd52688a8f926c816ca1e079067caba944f158e764817b83fc43594370ca9cf62);
     }
 
-    function testMint() public{
+    function testWhiteListMerkleMint() public{
         vm.prank(user);
-        rareSkillsNFT.mint();
+        rareSkillsNFT.whiteListMerkleMint(proof);
+        assertEq(rareSkillsNFT.tokenSupply(),1);
+        assertEq(rareSkillsNFT.balanceOf(user),1);
+        assertEq(rareSkillsNFT.tokenURI(0), "ipfs://QmZZzC4v7M6ZTYnuEgfA5qwHQUTm1DwRF8j3CQKtY6EXMF/0");
+    }
+
+    function testDigitalSignatureMint() public{
+        vm.prank(0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6);
+        rareSkillsNFT.whiteListDigitalSignatureMint(vm.parseBytes('0xfd41b12453f18a7cec20ccabd53b24ae133b5788f87ccc191fb1c625b408ae3049f24ce8b8c9a6a9b8c0c6aee104c9e8cc3ecda409792d4b8adfa15256dc1cff1c'));
         assertEq(rareSkillsNFT.tokenSupply(),1);
         assertEq(rareSkillsNFT.balanceOf(user),1);
         assertEq(rareSkillsNFT.tokenURI(0), "ipfs://QmZZzC4v7M6ZTYnuEgfA5qwHQUTm1DwRF8j3CQKtY6EXMF/0");

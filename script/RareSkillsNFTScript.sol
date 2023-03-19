@@ -10,7 +10,7 @@ contract SpacebearScript is Script {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
-        RareSkillsNFT nft = new RareSkillsNFT();
+        RareSkillsNFT nft = new RareSkillsNFT(0xf95c14e6953c95195639e8266ab1a6850864d59a829da9f9b13602ee522f672b);
 
         vm.stopBroadcast();
     }
