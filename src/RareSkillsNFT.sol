@@ -3,6 +3,7 @@ import "openzeppelin-contracts/contracts/utils/Strings.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
+import "openzeppelin-contracts/contracts/utils/structs/BitMaps.sol";
 import "forge-std/console.sol";
 
 // SPDX-License-Identifier: UNLICENSED
@@ -19,8 +20,7 @@ contract RareSkillsNFT is ERC721, Ownable {
     // for public signatures
     mapping (uint256 => address) userAllocationMap;
 
-    uint256 private constant MAX_INT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
-    uint256[1] private ticketsBitMap = [MAX_INT];
+    BitMaps.BitMap private allocationBitmap;
 
     // for merkle tree,
     bytes32 public merkleRoot;
@@ -33,10 +33,10 @@ contract RareSkillsNFT is ERC721, Ownable {
         presaleAllocation[address(1)] = 2;
         setAllowList3MerkleRoot(root);
         setAllowList2SigningAddress(0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6, 0);
+        setAllowList2SigningAddress(0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6, 1);
         setAllowList2SigningAddress(0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6, 2);
-        setAllowList2SigningAddress(0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6, 3);
 
-        setAllowList2SigningAddress(address(1), 1);
+        setAllowList2SigningAddress(address(1), 3);
         setAllowList2SigningAddress(address(1), 4);
     }
 
@@ -56,17 +56,20 @@ contract RareSkillsNFT is ERC721, Ownable {
     }
 
     function presaleMint() internal {
+        require(!publicSaleOpen, "Presale ended");
         require(presaleAllocation[msg.sender] > 0, "Allocation limit reached");
         internalMint();
         presaleAllocation[msg.sender] -= 1;
     }
 
     function whiteListMerkleMint(bytes32[] calldata proofs) external {
+        require(!publicSaleOpen, "Presale ended");
         benchmark3MerkleTree(proofs);
         presaleMint();
     }
 
     function whiteListDigitalSignatureMint(bytes calldata signature, uint256 ticketNumber) external {
+        require(!publicSaleOpen, "Presale ended");
         claimTicketOrBlockTransaction(ticketNumber);
         benchmark2PublicSignature(signature, ticketNumber);
         internalMint();
@@ -107,15 +110,8 @@ contract RareSkillsNFT is ERC721, Ownable {
     }
 
     function claimTicketOrBlockTransaction(uint256 ticketNumber) internal {
-        require(ticketNumber < ticketsBitMap.length * 256, "too large");
-        uint256 storageOffset = ticketNumber / 256;
-        uint256 offsetWithin256 = ticketNumber % 256;
-        //shift right, do an AND to zero out everything on the left
-        uint256 storedBit = (ticketsBitMap[storageOffset] >> offsetWithin256) & uint256(1);
-        require(storedBit == 1, "already taken");
-
-
-        ticketsBitMap[storageOffset] = ticketsBitMap[storageOffset] & ~(uint256(1) << offsetWithin256);
+        require(!BitMaps.get(allocationBitmap,ticketNumber), "already taken");
+        BitMaps.set(allocationBitmap,ticketNumber);
     }
 
     function benchmark3MerkleTree(bytes32[] calldata merkleProof) internal {

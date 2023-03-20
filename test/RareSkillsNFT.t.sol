@@ -42,4 +42,19 @@ contract RareSkillsNFTTest is        Test {
         rareSkillsNFT.whiteListDigitalSignatureMint(vm.parseBytes('0xbc7e05b0b14d35e7afe90898edb706c04e8bafa50b1a27cb7d777e81aae3521f4a4285a17c83d25621d1f0f89a42d1c9cb9ed882273ca305e97aad90185206fc1b'),0);
     }
 
+    function testDigitalSignatureNotAllocatedMint() public{
+        vm.expectRevert('Ticket not allocated to minter');
+        vm.prank(0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6);
+        rareSkillsNFT.whiteListDigitalSignatureMint(vm.parseBytes('0xbc7e05b0b14d35e7afe90898edb706c04e8bafa50b1a27cb7d777e81aae3521f4a4285a17c83d25621d1f0f89a42d1c9cb9ed882273ca305e97aad90185206fc1b'),3);
+    }
+
+    function testPublicSaleMint() public{
+        rareSkillsNFT.openPublicSale();
+        vm.prank(user);
+        rareSkillsNFT.mint();
+        assertEq(rareSkillsNFT.tokenSupply(),1);
+        assertEq(rareSkillsNFT.balanceOf(user),1);
+        assertEq(rareSkillsNFT.tokenURI(0), "ipfs://QmZZzC4v7M6ZTYnuEgfA5qwHQUTm1DwRF8j3CQKtY6EXMF/0");
+    }
+
 }
