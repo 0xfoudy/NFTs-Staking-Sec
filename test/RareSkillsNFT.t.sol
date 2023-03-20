@@ -57,4 +57,9 @@ contract RareSkillsNFTTest is        Test {
         assertEq(rareSkillsNFT.tokenURI(0), "ipfs://QmZZzC4v7M6ZTYnuEgfA5qwHQUTm1DwRF8j3CQKtY6EXMF/0");
     }
 
+    function testRoyalties() public{
+        (address x, uint256 fee) = rareSkillsNFT.royaltyInfo(0, 100);
+        assertEq(x, owner);
+        assertEq(fee, 2_500_000_000_000_000_000); 
+    }
 }

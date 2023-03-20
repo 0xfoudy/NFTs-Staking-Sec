@@ -1,5 +1,5 @@
 import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
-import "openzeppelin-contracts/contracts/utils/Strings.sol";
+import "openzeppelin-contracts/contracts/token/common/ERC2981.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
@@ -9,24 +9,23 @@ import "forge-std/console.sol";
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 
-contract RareSkillsNFT is ERC721, Ownable {
+contract RareSkillsNFT is ERC721, ERC2981, Ownable {
 
     uint256 public tokenSupply = 0;
     uint256 public constant MAX_SUPPLY = 10;
     mapping(address => uint256) public presaleAllocation;
     bool public publicSaleOpen = false;
     using ECDSA for bytes32; // Elliptic curve digital signature algorithm
-
     // for public signatures
     mapping (uint256 => address) userAllocationMap;
 
     BitMaps.BitMap private allocationBitmap;
+    uint256 royalteeDenominator = 10000;
+    RoyaltyInfo private _royalties;
 
     // for merkle tree,
     bytes32 public merkleRoot;
-
-    // because we don't want solidity / ethers to think these are view functions
-    // or hardhat won't measure the gas
+    // to make functions non view
     uint256 public dummy;
 
     constructor(bytes32 root) ERC721("RareSkillsNFT", "RRSKLZ"){
@@ -38,6 +37,8 @@ contract RareSkillsNFT is ERC721, Ownable {
 
         setAllowList2SigningAddress(address(1), 3);
         setAllowList2SigningAddress(address(1), 4);
+
+        _royalties = RoyaltyInfo(msg.sender, 250);
     }
 
     function openPublicSale() public onlyOwner {
@@ -125,5 +126,16 @@ contract RareSkillsNFT is ERC721, Ownable {
         if (false) {
             dummy = 1;
         }
+    }
+
+    //receiver gets the royalty amount, first param is for tokenId in case royalt
+    function royaltyInfo(uint256, uint256 _salePrice) public view override returns (address, uint256){
+        uint256 royaltyAmount = _salePrice * 10**18 * _royalties.royaltyFraction / royalteeDenominator;
+        address receiver = _royalties.receiver;
+        return(receiver, royaltyAmount);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC2981) returns (bool){
+        return super.supportsInterface(interfaceId);
     }
 }
