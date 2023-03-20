@@ -29,10 +29,17 @@ contract RareSkillsNFTTest is        Test {
 
     function testDigitalSignatureMint() public{
         vm.prank(0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6);
-        rareSkillsNFT.whiteListDigitalSignatureMint(vm.parseBytes('0xfd41b12453f18a7cec20ccabd53b24ae133b5788f87ccc191fb1c625b408ae3049f24ce8b8c9a6a9b8c0c6aee104c9e8cc3ecda409792d4b8adfa15256dc1cff1c'));
+        rareSkillsNFT.whiteListDigitalSignatureMint(vm.parseBytes('0xbc7e05b0b14d35e7afe90898edb706c04e8bafa50b1a27cb7d777e81aae3521f4a4285a17c83d25621d1f0f89a42d1c9cb9ed882273ca305e97aad90185206fc1b'),0);
         assertEq(rareSkillsNFT.tokenSupply(),1);
-        assertEq(rareSkillsNFT.balanceOf(user),1);
+        assertEq(rareSkillsNFT.balanceOf(0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6),1);
         assertEq(rareSkillsNFT.tokenURI(0), "ipfs://QmZZzC4v7M6ZTYnuEgfA5qwHQUTm1DwRF8j3CQKtY6EXMF/0");
+    }
+
+    function testDigitalSignatureRemint() public{
+        vm.prank(0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6);
+        rareSkillsNFT.whiteListDigitalSignatureMint(vm.parseBytes('0xbc7e05b0b14d35e7afe90898edb706c04e8bafa50b1a27cb7d777e81aae3521f4a4285a17c83d25621d1f0f89a42d1c9cb9ed882273ca305e97aad90185206fc1b'),0);
+        vm.expectRevert('already taken');
+        rareSkillsNFT.whiteListDigitalSignatureMint(vm.parseBytes('0xbc7e05b0b14d35e7afe90898edb706c04e8bafa50b1a27cb7d777e81aae3521f4a4285a17c83d25621d1f0f89a42d1c9cb9ed882273ca305e97aad90185206fc1b'),0);
     }
 
 }

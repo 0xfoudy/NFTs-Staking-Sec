@@ -15,13 +15,14 @@ contract RareSkillsNFT is ERC721, Ownable {
     mapping(address => uint256) public presaleAllocation;
     bool public publicSaleOpen = false;
     using ECDSA for bytes32; // Elliptic curve digital signature algorithm
-    // uints are slightly more efficient than bools because the EVM casts bools to uint
-    mapping(address => uint256) public allowList;
 
     // for public signatures
-    address public allowListSigningAddress = 0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6;
+    mapping (uint256 => address) userAllocationMap;
 
-    // for merkle tree, 
+    uint256 private constant MAX_INT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    uint256[1] private ticketsBitMap = [MAX_INT];
+
+    // for merkle tree,
     bytes32 public merkleRoot;
 
     // because we don't want solidity / ethers to think these are view functions
@@ -30,7 +31,13 @@ contract RareSkillsNFT is ERC721, Ownable {
 
     constructor(bytes32 root) ERC721("RareSkillsNFT", "RRSKLZ"){
         presaleAllocation[address(1)] = 2;
-        merkleRoot = root;
+        setAllowList3MerkleRoot(root);
+        setAllowList2SigningAddress(0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6, 0);
+        setAllowList2SigningAddress(0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6, 2);
+        setAllowList2SigningAddress(0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6, 3);
+
+        setAllowList2SigningAddress(address(1), 1);
+        setAllowList2SigningAddress(address(1), 4);
     }
 
     function openPublicSale() public onlyOwner {
@@ -59,9 +66,10 @@ contract RareSkillsNFT is ERC721, Ownable {
         presaleMint();
     }
 
-    function whiteListDigitalSignatureMint(bytes calldata signature) external {
-        benchmark2PublicSignature(signature);
-        presaleMint();
+    function whiteListDigitalSignatureMint(bytes calldata signature, uint256 ticketNumber) external {
+        claimTicketOrBlockTransaction(ticketNumber);
+        benchmark2PublicSignature(signature, ticketNumber);
+        internalMint();
     }
 
     function viewBalance() external view returns (uint256) {
@@ -72,49 +80,23 @@ contract RareSkillsNFT is ERC721, Ownable {
         return "ipfs://QmZZzC4v7M6ZTYnuEgfA5qwHQUTm1DwRF8j3CQKtY6EXMF/";
     }
 
-    // NOT SAFE FOR PRODUCTION, ANYONE CAN EDIT
-    function setAllowList1Mapping(address _buyer) public onlyOwner{
-        allowList[_buyer] = 1;
+    function setAllowList2SigningAddress(address _signingAddress, uint256 _allowedTickets) public onlyOwner{
+        userAllocationMap[_allowedTickets] = (_signingAddress);
     }
 
-    // NOT SAFE FOR PRODUCTION, ANYONE CAN EDIT
-    function setAllowList2SigningAddress(address _signingAddress) public onlyOwner{
-        allowListSigningAddress = _signingAddress;
-    }
-
-    // NOT SAFE FOR PRODUCTION, ANYONE CAN EDIT
     function setAllowList3MerkleRoot(bytes32 root) public onlyOwner{
         merkleRoot = root;
     }
 
-    function benchmark1Mapping() internal {
-        require(allowList[msg.sender] == 1, "not allowed");
-
-        //if you execute the following code, the gas will be even lower
-        //because the EVM refunds for setting storage to zero
-
-        //allowList[msg.sender] == 0;
-
-
-        if (false) {
-            dummy = 1;
-        }
-    }
-
-    function benchmark2PublicSignature(bytes calldata _signature) internal {
-        console.log(msg.sender);
-        console.logBytes32(bytes32(uint256(uint160(msg.sender))));
-        console.logBytes32(keccak256(
-                    abi.encodePacked(
-                        "\x19Ethereum Signed Message:\n32",
-                        bytes32(uint256(uint160(msg.sender)))
-                    )));
+    function benchmark2PublicSignature(bytes calldata _signature, uint256 _ticketNumber) internal {
+        require(userAllocationMap[_ticketNumber] == msg.sender, "Ticket not allocated to minter");
         require(
-            allowListSigningAddress ==
+            msg.sender ==
                 keccak256(
                     abi.encodePacked(
-                        "\x19Ethereum Signed Message:\n32",
-                        bytes32(uint256(uint160(msg.sender)))
+                        "\x19Ethereum Signed Message:\n64",
+                        bytes32(uint256(uint160(msg.sender))),
+                        _ticketNumber
                     )
                 ).recover(_signature),
             "not allowed"
@@ -122,6 +104,18 @@ contract RareSkillsNFT is ERC721, Ownable {
         if (false) {
             dummy = 1;
         }
+    }
+
+    function claimTicketOrBlockTransaction(uint256 ticketNumber) internal {
+        require(ticketNumber < ticketsBitMap.length * 256, "too large");
+        uint256 storageOffset = ticketNumber / 256;
+        uint256 offsetWithin256 = ticketNumber % 256;
+        //shift right, do an AND to zero out everything on the left
+        uint256 storedBit = (ticketsBitMap[storageOffset] >> offsetWithin256) & uint256(1);
+        require(storedBit == 1, "already taken");
+
+
+        ticketsBitMap[storageOffset] = ticketsBitMap[storageOffset] & ~(uint256(1) << offsetWithin256);
     }
 
     function benchmark3MerkleTree(bytes32[] calldata merkleProof) internal {
