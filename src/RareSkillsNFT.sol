@@ -1,6 +1,5 @@
 import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 import "openzeppelin-contracts/contracts/token/common/ERC2981.sol";
-import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
 import "openzeppelin-contracts/contracts/utils/structs/BitMaps.sol";
@@ -9,7 +8,10 @@ import "forge-std/console.sol";
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 
-contract RareSkillsNFT is ERC721, ERC2981, Ownable {
+contract RareSkillsNFT is ERC721, ERC2981 {
+    address public _owner; 
+    address public _potentialOwner;
+    bool public pendingOwnershipTransfer = false;
 
     uint256 public tokenSupply = 0;
     uint256 public constant MAX_SUPPLY = 10;
@@ -29,6 +31,7 @@ contract RareSkillsNFT is ERC721, ERC2981, Ownable {
     uint256 public dummy;
 
     constructor(bytes32 root) ERC721("RareSkillsNFT", "RRSKLZ"){
+        _owner = msg.sender;
         presaleAllocation[address(1)] = 2;
         setAllowList3MerkleRoot(root);
         setAllowList2SigningAddress(0xA3FE755e8FB7cFB97FAda75567cF9d7cef04B6f6, 0);
@@ -39,6 +42,27 @@ contract RareSkillsNFT is ERC721, ERC2981, Ownable {
         setAllowList2SigningAddress(address(1), 4);
 
         _royalties = RoyaltyInfo(msg.sender, 250);
+    }
+
+    function _isOwner() internal view virtual {
+        require(_owner == msg.sender, "OnlyOwner: caller is not the Owner");
+    }
+
+    modifier onlyOwner() {
+        _isOwner();
+        _;
+    }
+
+    function transferOwnership(address newOwner) public onlyOwner {
+        _potentialOwner = newOwner;
+        pendingOwnershipTransfer = true;
+    }
+
+    function acceptOwnership() public {
+        require(pendingOwnershipTransfer, "no pending ownership transfer");
+        require(_potentialOwner == msg.sender, "no ownership invitation for you!");
+        _owner = msg.sender;
+        pendingOwnershipTransfer = false;
     }
 
     function openPublicSale() public onlyOwner {

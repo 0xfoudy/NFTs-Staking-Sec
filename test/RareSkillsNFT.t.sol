@@ -62,4 +62,30 @@ contract RareSkillsNFTTest is        Test {
         assertEq(x, owner);
         assertEq(fee, 2_500_000_000_000_000_000); 
     }
+
+    function testOwnerShipTransfer() public{
+        // accept ownership without ownership transfer
+        vm.expectRevert('no pending ownership transfer');
+        vm.prank(user);
+        rareSkillsNFT.acceptOwnership();
+        rareSkillsNFT.transferOwnership(user);
+
+        // call owner only before accepting ownership
+        vm.expectRevert('OnlyOwner: caller is not the Owner');
+        vm.prank(user);
+        rareSkillsNFT.openPublicSale();
+
+        // try to take pending ownership from another address
+        vm.prank(address(2));
+        vm.expectRevert('no ownership invitation for you!');
+        rareSkillsNFT.acceptOwnership();
+
+        // legit ownership acceptance
+        vm.prank(user);
+        rareSkillsNFT.acceptOwnership();
+        vm.prank(user);
+        rareSkillsNFT.openPublicSale();
+
+        assertEq(rareSkillsNFT.publicSaleOpen(), true);
+    }
 }
