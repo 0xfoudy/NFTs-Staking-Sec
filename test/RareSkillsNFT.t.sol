@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import "../src/RareSkillsNFT.sol";
 
 
-contract RareSkillsNFTTest is        Test {
+contract RareSkillsNFTTest is Test {
     RareSkillsNFT public rareSkillsNFT;
     address owner;
     address user;

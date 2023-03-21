@@ -3,7 +3,6 @@ import "openzeppelin-contracts/contracts/token/common/ERC2981.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
 import "openzeppelin-contracts/contracts/utils/structs/BitMaps.sol";
-import "forge-std/console.sol";
 
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
@@ -17,8 +16,7 @@ contract RareSkillsNFT is ERC721, ERC2981 {
     uint256 public constant MAX_SUPPLY = 10;
     mapping(address => uint256) public presaleAllocation;
     bool public publicSaleOpen = false;
-    using ECDSA for bytes32; // Elliptic curve digital signature algorithm
-    // for public signatures
+    using ECDSA for bytes32; // Elliptic curve digital signature algorithm for public signatures
     mapping (uint256 => address) userAllocationMap;
 
     BitMaps.BitMap private allocationBitmap;
