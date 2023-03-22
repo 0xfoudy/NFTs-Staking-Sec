@@ -8,23 +8,23 @@ import "./StakeableNFT.sol";
 import "./StakeRewardToken.sol";
 import "forge-std/console.sol";
 
-contract NFTStaker is IERC721Receiver, Ownable{
+contract NFTSUniquetaker is IERC721Receiver, Ownable{
     IERC721 public stakeableNFT;
     mapping(uint256 => address) public originalOwner;
-    mapping(address => stakerInfo) public stakersMap;
+    mapping(uint256 => stakerInfo) public tokenIdToStaker;
     uint256 constant public _rewardsPerDay = 10;
     uint256 constant public _decimals = 18;
     StakeRewardToken public rewardToken;
     bool isStakingTransfer = false;
 
     struct stakerInfo {
-        uint256 nftsStaked;
+        address nftOwner;
         uint256 timeStaked;
         uint256 leftover;
     }
 
-    function getStakerInfo(address user) public view returns (stakerInfo memory){
-        return stakersMap[user];
+    function getStakerInfo(uint256 tokenId) public view returns (stakerInfo memory){
+        return tokenIdToStaker[tokenId];
     }
 
     constructor(IERC721 _address, address _rewardToken) {
@@ -41,31 +41,29 @@ contract NFTStaker is IERC721Receiver, Ownable{
 
     function withdrawNFT(uint256 tokenId) external{
         require(originalOwner[tokenId] == msg.sender, "Not original owner");
-        stakersMap[msg.sender].nftsStaked -= 1;
+        delete tokenIdToStaker[tokenId];
         stakeableNFT.safeTransferFrom(address(this), msg.sender, tokenId);      
     }
 
-    function newDeposit(address from) internal {
-        if(stakersMap[from].nftsStaked > 0) {
-            collectRewards();
-        }
-        stakersMap[from].nftsStaked += 1;
+    function newDeposit(uint256 tokenId) internal {
+        tokenIdToStaker[tokenId].nftOwner = originalOwner[tokenId];
     }
 
-    function collectRewards(address from) internal {
-        (uint256 toGive, uint256 toRetain) = calculateReward(from);
-        rewardToken.mintReward(toGive, from);
-        stakersMap[from].timeStaked = block.timestamp;
-        stakersMap[from].leftover = toRetain;
+    function collectRewards(uint256 tokenId) internal {
+        (uint256 toGive, uint256 toRetain) = calculateReward(tokenId);
+        rewardToken.mintReward(toGive, msg.sender);
+        tokenIdToStaker[tokenId].timeStaked = block.timestamp;
+        tokenIdToStaker[tokenId].leftover = toRetain;
     }
 
     function collectRewards() public {
-        collectRewards(msg.sender);
+       //iterate over the tokens held by the owner
+        // collectRewards();
     }
 
-    function calculateReward(address from) public view returns (uint256, uint256){
-        uint256 timesSinceClaim = block.timestamp - stakersMap[from].timeStaked;
-        uint256 totalRewards = stakersMap[from].leftover + stakersMap[from].nftsStaked * _rewardsPerDay * 10**_decimals * (timesSinceClaim)/(60*60*24);
+    function calculateReward(uint256 tokenId) public view returns (uint256, uint256){
+        uint256 timesSinceClaim = block.timestamp - tokenIdToStaker[tokenId].timeStaked;
+        uint256 totalRewards = tokenIdToStaker[tokenId].leftover + _rewardsPerDay * 10**_decimals * (timesSinceClaim)/(60*60*24);
         uint256 unitsOfTenRewards = (totalRewards/10**18)*10**18;
         uint256 remainder = totalRewards - unitsOfTenRewards;
         return (unitsOfTenRewards, remainder);
@@ -81,9 +79,9 @@ contract NFTStaker is IERC721Receiver, Ownable{
         // make sure we can only transfer the NFT collection we want
         require(msg.sender == address(stakeableNFT), "Non acceptable NFT");
         // to prevent random NFTs to be sent
-        // require(isStakingTransfer, 'Please transfer the NFT through the staking function');
+         require(isStakingTransfer, 'Please transfer the NFT through the staking function');
         originalOwner[tokenId] = from;
-        newDeposit(from);
+        newDeposit(tokenId);
         return IERC721Receiver.onERC721Received.selector;
     }
 }
