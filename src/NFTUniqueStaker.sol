@@ -8,11 +8,11 @@ import "./StakeableNFT.sol";
 import "./StakeRewardToken.sol";
 import "forge-std/console.sol";
 
-contract NFTSUniquetaker is IERC721Receiver, Ownable{
+contract NFTUniqueStaker is IERC721Receiver, Ownable{
     IERC721 public stakeableNFT;
     mapping(uint256 => address) public originalOwner;
     mapping(uint256 => stakerInfo) public tokenIdToStaker;
-    uint256 constant public _rewardsPerDay = 10;
+    uint256[20] public _rewardsPerDay = [54,10,10,13,15,16,17,18,29,50,19,29,53,25,63,23,54,78,17,9];
     uint256 constant public _decimals = 18;
     StakeRewardToken public rewardToken;
     bool isStakingTransfer = false;
@@ -63,7 +63,7 @@ contract NFTSUniquetaker is IERC721Receiver, Ownable{
 
     function calculateReward(uint256 tokenId) public view returns (uint256, uint256){
         uint256 timesSinceClaim = block.timestamp - tokenIdToStaker[tokenId].timeStaked;
-        uint256 totalRewards = tokenIdToStaker[tokenId].leftover + _rewardsPerDay * 10**_decimals * (timesSinceClaim)/(60*60*24);
+        uint256 totalRewards = tokenIdToStaker[tokenId].leftover + _rewardsPerDay[tokenId] * 10**_decimals * (timesSinceClaim)/(60*60*24);
         uint256 unitsOfTenRewards = (totalRewards/10**18)*10**18;
         uint256 remainder = totalRewards - unitsOfTenRewards;
         return (unitsOfTenRewards, remainder);
