@@ -58,6 +58,15 @@ contract NFTStakerTest is Test {
         assertEq(rareSkillsNFT.balanceOf(address(stakingContract)), 0);
     }
 
+    function testStakeAndReward() public {
+        testAndTransfer();
+        assertEq(stakingContract.calculateReward(user), 0);
+        assertEq(stakingContract.getStakerInfo(user).nftsStaked, 1);
 
+        vm.warp(block.timestamp + 60*60*24);
+        assertEq(stakingContract.calculateReward(user), 10*10**18);
+        vm.warp(block.timestamp + 60*60*12);
+        assertEq(stakingContract.calculateReward(user), 10*10**18);
+    }
 
 }
