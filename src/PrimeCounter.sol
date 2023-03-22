@@ -9,19 +9,10 @@ contract PrimeCounter {
         enumerableNFT = ERC721Enumerable(addy);
     }
 
-    function sqrt(uint256 x) internal pure returns (uint256 y) {
-        uint256 z = (x + 1) / 2;
-        y = x;
-        while (z < y) {
-            y = z;
-            z = (x / z + z) / 2;
-        }
-        return y;
-    }
-
     function isPrime(uint256 tokenId) internal pure returns (bool){
-        if(tokenId == 1 || tokenId == 2) return true;
-        for(uint256 i = 2; i < sqrt(tokenId); ++i){
+        if(tokenId == 1) return false;
+        if(tokenId == 2) return true;
+        for(uint256 i = 2; i < tokenId; ++i){
             if(tokenId % i == 0){
                 return false;
             }
