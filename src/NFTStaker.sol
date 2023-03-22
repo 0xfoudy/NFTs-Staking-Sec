@@ -15,6 +15,7 @@ contract NFTStaker is IERC721Receiver, Ownable{
     uint256 constant public _rewardsPerDay = 10;
     uint256 constant public _decimals = 18;
     StakeRewardToken public rewardToken;
+    bool isStakingTransfer = false;
 
     struct stakerInfo {
         uint256 nftsStaked;
@@ -33,7 +34,9 @@ contract NFTStaker is IERC721Receiver, Ownable{
 
     function depositNFT(uint256 tokenId) external{
         originalOwner[tokenId] = msg.sender;
+        isStakingTransfer = true;
         stakeableNFT.safeTransferFrom(msg.sender, address(this), tokenId);
+        isStakingTransfer = false;
     }
 
     function withdrawNFT(uint256 tokenId) external{
@@ -75,6 +78,10 @@ contract NFTStaker is IERC721Receiver, Ownable{
         uint256 tokenId,
         bytes calldata data
     ) external override returns (bytes4) {
+        // make sure we can only transfer the NFT collection we want
+        require(msg.sender == address(stakeableNFT), "Non acceptable NFT");
+        // to prevent random NFTs to be sent
+        // require(isStakingTransfer, 'Please transfer the NFT through the staking function');
         originalOwner[tokenId] = from;
         newDeposit(from);
         return IERC721Receiver.onERC721Received.selector;
