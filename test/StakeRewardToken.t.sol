@@ -21,11 +21,10 @@ contract StakeRewardTokenTest is Test {
     function testTryMint() public {
         vm.expectRevert('not allowed to mint');
         vm.prank(user1);
-        stakeRewardToken.mintReward(1500);
-        
+        stakeRewardToken.mintReward(1500*decimals, user1);
         stakeRewardToken.allowToMint(user1);
         vm.prank(user1);
-        stakeRewardToken.mintReward(1500);
+        stakeRewardToken.mintReward(1500*decimals, user1);
         assertEq(stakeRewardToken.totalSupply(), 1500*decimals);
         assertEq(stakeRewardToken.balanceOf(user1), 1500*decimals);
     }

@@ -18,8 +18,8 @@ contract StakeRewardToken is ERC20, Ownable {
         allowedToMint[exMinter] = false;
     }
 
-    function mintReward(uint256 amountToMint) public {
+    function mintReward(uint256 amountToMint, address to) public {
         require(allowedToMint[msg.sender], "not allowed to mint");
-        _mint(msg.sender, amountToMint * 10 ** _decimals);
+        _mint(to, amountToMint);
     }
 }
