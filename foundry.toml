@@ -8,6 +8,8 @@ fs_permissions = [{ access = "read", path = "./"}]
 
 [rpc_endpoints]
 goerli = "${GOERLI_RPC_URL}"
+polygonTest = "${POLYGON_TESTNET_RPC_URL}"
 
 [etherscan]
 goerli = {key = "${ETHERSCAN_API_KEY}" }
+polygonTestKey = {key = "${ETHERSCAN_API_KEY}" }
