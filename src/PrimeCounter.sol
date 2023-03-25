@@ -5,6 +5,7 @@ import "openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721Enumerabl
 
 contract PrimeCounter {
     ERC721Enumerable public enumerableNFT;
+    
     constructor(address addy){
         enumerableNFT = ERC721Enumerable(addy);
     }

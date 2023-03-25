@@ -8,6 +8,8 @@ import "openzeppelin-contracts/contracts/utils/structs/BitMaps.sol";
 pragma solidity 0.8.13;
 
 contract RareSkillsNFT is ERC721, ERC2981 {
+    using ECDSA for bytes32; // Elliptic curve digital signature algorithm for public signatures
+
     address public _owner; 
     address public _potentialOwner;
     bool public pendingOwnershipTransfer = false;
@@ -16,11 +18,10 @@ contract RareSkillsNFT is ERC721, ERC2981 {
     uint256 public constant MAX_SUPPLY = 10;
     mapping(address => uint256) public presaleAllocation;
     bool public publicSaleOpen = false;
-    using ECDSA for bytes32; // Elliptic curve digital signature algorithm for public signatures
-    mapping (uint256 => address) userAllocationMap;
+    mapping (uint256 => address) public userAllocationMap;
 
     BitMaps.BitMap private allocationBitmap;
-    uint256 royalteeDenominator = 10000;
+    uint256 private royalteeDenominator = 10000;
     RoyaltyInfo private _royalties;
 
     // for merkle tree,

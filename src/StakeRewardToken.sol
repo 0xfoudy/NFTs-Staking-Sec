@@ -5,8 +5,8 @@ import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 
 contract StakeRewardToken is ERC20, Ownable {
-    mapping(address => bool) allowedToMint;
-    uint256 _decimals = 18;
+    mapping(address => bool) private allowedToMint;
+    uint256 private _decimals = 18;
     
     constructor() ERC20('StakeRewardToken', 'RWRD'){}
 
